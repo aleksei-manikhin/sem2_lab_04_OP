@@ -136,7 +136,7 @@ QWidget#emptyPage {
     border: 1px solid #dbe3ef;
     border-radius: 16px;
 }
-QWidget#emptyPage[dropActive="true"] {
+QWidget#emptyPage[dropActive=&quot;true&quot;] {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                                 stop:0 #e5fbff, stop:1 #eef8ff);
     border: 1px solid #dbe3ef;
@@ -370,7 +370,7 @@ QStatusBar QLabel {
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset resource="resources.qrc">
+           <iconset resource="resourses.qrc">
             <normaloff>:/icons/icons/downloadFile.svg</normaloff>
             <normalon>:/icons/icons/downloadFile.svg</normalon>:/icons/icons/downloadFile.svg</iconset>
           </property>
@@ -712,6 +712,12 @@ QStatusBar QLabel {
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
+             <property name="minimum">
+              <double>-9999.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>9999.000000000000000</double>
+             </property>
             </widget>
            </item>
           </layout>
@@ -748,6 +754,12 @@ QStatusBar QLabel {
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
+             <property name="minimum">
+              <double>-9999.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>9999.000000000000000</double>
+             </property>
             </widget>
            </item>
           </layout>
@@ -783,6 +795,12 @@ QStatusBar QLabel {
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+             </property>
+             <property name="minimum">
+              <double>-9999.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>9999.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -844,6 +862,12 @@ QStatusBar QLabel {
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
+             <property name="minimum">
+              <double>-360.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>360.000000000000000</double>
+             </property>
             </widget>
            </item>
           </layout>
@@ -880,6 +904,12 @@ QStatusBar QLabel {
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
+             <property name="minimum">
+              <double>-360.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>360.000000000000000</double>
+             </property>
             </widget>
            </item>
           </layout>
@@ -915,6 +945,12 @@ QStatusBar QLabel {
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+             </property>
+             <property name="minimum">
+              <double>-360.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>360.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -971,7 +1007,13 @@ QStatusBar QLabel {
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
            <property name="minimum">
+            <double>0.001000000000000</double>
+           </property>
+           <property name="singleStep">
             <double>0.001000000000000</double>
            </property>
            <property name="value">
@@ -1012,7 +1054,7 @@ QStatusBar QLabel {
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="resourses.qrc"/>
  </resources>
  <connections/>
 </ui>

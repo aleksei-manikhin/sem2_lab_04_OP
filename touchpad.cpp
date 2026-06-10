@@ -10,70 +10,17 @@
 #include <QtGlobal>
 #include <QWheelEvent>
 
-class TouchpadHelper
-{
-public:
-    static constexpr double DefaultScaleFactor = 1.0;
-    static constexpr double MoveMinValue = -9999.0;
-    static constexpr double MoveMaxValue = 9999.0;
-    static constexpr double RotationMinValue = -360.0;
-    static constexpr double RotationMaxValue = 360.0;
-    static constexpr int ScaleDecimals = 4;
-    static constexpr double ScaleSingleStep = 0.001;
+static const double DEFAULT_SCALE_FACTOR = 1.0;
+static const double MOVE_BY_PIXEL = 0.12;
+static const double MOVE_BY_ANGLE = 1.6 / 120.0;
+static const double WHEEL_ZOOM_BY_PIXEL = 1.0 / 500.0;
+static const double WHEEL_ZOOM_BY_ANGLE = 1.0 / 900.0;
+static const double WHEEL_ZOOM_MIN_FACTOR = 0.75;
+static const double WHEEL_ZOOM_MAX_FACTOR = 1.35;
+static const double NATIVE_ZOOM_MIN_FACTOR = 0.2;
+static const double NATIVE_ZOOM_MAX_FACTOR = 5.0;
 
-    static double deltaToSceneMove(int delta, int isPixelDelta)
-    {
-        return delta * (isPixelDelta ? MoveByPixel : MoveByAngle);
-    }
-
-    static double deltaToZoomFactor(int delta, int isPixelDelta)
-    {
-        return qBound(
-            WheelZoomMinFactor,
-            DefaultScaleFactor
-                + delta * (isPixelDelta ? WheelZoomByPixel : WheelZoomByAngle),
-            WheelZoomMaxFactor);
-    }
-
-    static double nativeZoomFactor(double scaleDelta)
-    {
-        return qBound(
-            NativeZoomMinFactor,
-            DefaultScaleFactor + scaleDelta,
-            NativeZoomMaxFactor);
-    }
-
-    static QPoint touchpadDelta(QWheelEvent* wheelEvent, int& isPixelDelta)
-    {
-        QPoint delta = wheelEvent->pixelDelta();
-        isPixelDelta = 1;
-
-        if (delta.isNull()) {
-            delta = wheelEvent->angleDelta();
-            isPixelDelta = 0;
-        }
-
-        return delta;
-    }
-
-    static int zScrollDelta(const QPoint& delta)
-    {
-        return delta.y() != 0 ? delta.y() : delta.x();
-    }
-
-private:
-    static constexpr double MoveByPixel = 0.12;
-    static constexpr double MoveByAngle = 1.6 / 120.0;
-    static constexpr double WheelZoomByPixel = 1.0 / 500.0;
-    static constexpr double WheelZoomByAngle = 1.0 / 900.0;
-    static constexpr double WheelZoomMinFactor = 0.75;
-    static constexpr double WheelZoomMaxFactor = 1.35;
-    static constexpr double NativeZoomMinFactor = 0.2;
-    static constexpr double NativeZoomMaxFactor = 5.0;
-};
-
-void MainWindow::setSpinBoxValueWithoutUpdate(
-    QDoubleSpinBox* spinBox, double value)
+void MainWindow::setSpinBoxValueWithoutUpdate(QDoubleSpinBox* spinBox, double value)
 {
     isChangingValues = true;
     spinBox->setValue(value);
@@ -82,164 +29,128 @@ void MainWindow::setSpinBoxValueWithoutUpdate(
 
 int MainWindow::isTouchpadWidget(const QObject* watched) const
 {
-    return watched == ui->graphicsView
-           || watched == ui->graphicsView->viewport();
+    return watched == ui->graphicsView || watched == ui->graphicsView->viewport();
 }
 
 int MainWindow::handleTouchpadEvent(const QObject* watched, QEvent* event)
 {
-    if (event == nullptr)
-        return 0;
+    int isHandled = 0;
 
-    updateZKeyState(event);
+    if (event != nullptr) {
+        updateZKeyState(event);
 
-    if (!isTouchpadWidget(watched))
-        return 0;
-    if (event->type() == QEvent::Wheel)
-        return handleTouchpadWheel(static_cast<QWheelEvent*>(event));
-    if (event->type() == QEvent::NativeGesture)
-        return handleTouchpadNativeGesture(
-            static_cast<QNativeGestureEvent*>(event));
+        if (isTouchpadWidget(watched)) {
+            if (event->type() == QEvent::Wheel)
+                isHandled = handleTouchpadWheel(static_cast<QWheelEvent*>(event));
+            else if (event->type() == QEvent::NativeGesture)
+                isHandled = handleTouchpadNativeGesture(static_cast<QNativeGestureEvent*>(event));
+        }
+    }
 
-    return 0;
+    return isHandled;
 }
 
 void MainWindow::updateZKeyState(QEvent* event)
 {
-    if (event->type() != QEvent::KeyPress
-        && event->type() != QEvent::KeyRelease) {
-        return;
+    const int isKeyEvent = event->type() == QEvent::KeyPress
+                           || event->type() == QEvent::KeyRelease;
+
+    if (isKeyEvent) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_Z && !keyEvent->isAutoRepeat())
+            isZPressed = event->type() == QEvent::KeyPress;
     }
-
-    QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-
-    if (keyEvent->key() == Qt::Key_Z && !keyEvent->isAutoRepeat())
-        isZPressed = event->type() == QEvent::KeyPress;
 }
 
 int MainWindow::handleTouchpadWheel(QWheelEvent* wheelEvent)
 {
+    int isHandled = 0;
     int isPixelDelta = 1;
-    const QPoint delta = TouchpadHelper::touchpadDelta(
-        wheelEvent, isPixelDelta);
+    QPoint delta = wheelEvent->pixelDelta();
 
-    if (delta.isNull())
-        return 0;
+    if (delta.isNull()) {
+        delta = wheelEvent->angleDelta();
+        isPixelDelta = 0;
+    }
+    if (!delta.isNull()) {
+        if (wheelEvent->modifiers() & Qt::ControlModifier) {
+            const double zoomStep = isPixelDelta ? WHEEL_ZOOM_BY_PIXEL : WHEEL_ZOOM_BY_ANGLE;
+            const double scaleFactor = qBound(WHEEL_ZOOM_MIN_FACTOR, DEFAULT_SCALE_FACTOR + delta.y() * zoomStep,
+                                              WHEEL_ZOOM_MAX_FACTOR);
+            zoomTouchpadScene(scaleFactor);
+        } else
+            moveTouchpadScene(delta, isPixelDelta);
 
-    if (wheelEvent->modifiers() & Qt::ControlModifier)
-        zoomTouchpadScene(
-            TouchpadHelper::deltaToZoomFactor(delta.y(), isPixelDelta));
-    else
-        moveTouchpadScene(delta, isPixelDelta);
+        wheelEvent->accept();
+        isHandled = 1;
+    }
 
-    wheelEvent->accept();
-    return 1;
+    return isHandled;
 }
 
-int MainWindow::handleTouchpadNativeGesture(
-    QNativeGestureEvent* gestureEvent)
+int MainWindow::handleTouchpadNativeGesture(QNativeGestureEvent* gestureEvent)
 {
-    if (gestureEvent->gestureType() != Qt::ZoomNativeGesture)
-        return 0;
-
+    int isHandled = 0;
     const double scaleDelta = gestureEvent->value();
+    const int isZoom = gestureEvent->gestureType() == Qt::ZoomNativeGesture;
 
-    if (qFuzzyIsNull(scaleDelta))
-        return 0;
+    if (isZoom && !qFuzzyIsNull(scaleDelta)) {
+        const double scaleFactor = qBound(NATIVE_ZOOM_MIN_FACTOR,
+                                          DEFAULT_SCALE_FACTOR + scaleDelta,
+                                          NATIVE_ZOOM_MAX_FACTOR);
+        zoomTouchpadScene(scaleFactor);
+        gestureEvent->accept();
+        isHandled = 1;
+    }
 
-    zoomTouchpadScene(TouchpadHelper::nativeZoomFactor(scaleDelta));
-    gestureEvent->accept();
-
-    return 1;
+    return isHandled;
 }
 
 void MainWindow::zoomTouchpadScene(double scaleFactor)
 {
-    if (!hasLoadedData()
-        || qFuzzyCompare(scaleFactor, TouchpadHelper::DefaultScaleFactor)) {
-        return;
+    const int shouldZoom = hasLoadedData()
+                           && !qFuzzyCompare(scaleFactor, DEFAULT_SCALE_FACTOR);
+
+    if (shouldZoom) {
+        const double oldScale = ui->doubleSpinBox_14->value();
+        setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_14, oldScale * scaleFactor);
+
+        if (scaleFactor > DEFAULT_SCALE_FACTOR
+            && qFuzzyCompare(ui->doubleSpinBox_14->value(), oldScale))
+            setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_14,
+                                         oldScale + ui->doubleSpinBox_14->singleStep());
+
+        updateTransform(false);
     }
-
-    const double oldScale = ui->doubleSpinBox_14->value();
-
-    setSpinBoxValueWithoutUpdate(
-        ui->doubleSpinBox_14, oldScale * scaleFactor);
-
-    if (scaleFactor > TouchpadHelper::DefaultScaleFactor
-        && qFuzzyCompare(ui->doubleSpinBox_14->value(), oldScale)) {
-        setSpinBoxValueWithoutUpdate(
-            ui->doubleSpinBox_14,
-            oldScale + ui->doubleSpinBox_14->singleStep());
-    }
-
-    applyTouchpadTransform();
 }
 
 void MainWindow::moveTouchpadScene(const QPoint& delta, int isPixelDelta)
 {
-    if (!hasLoadedData())
-        return;
+    const double moveStep = isPixelDelta ? MOVE_BY_PIXEL : MOVE_BY_ANGLE;
 
-    if (isZPressed)
-        moveTouchpadSceneByZ(delta, isPixelDelta);
-    else
-        moveTouchpadSceneByXY(delta, isPixelDelta);
-}
+    if (hasLoadedData()) {
+        if (isZPressed) {
+            const int zDelta = delta.y() != 0 ? delta.y() : delta.x();
+            setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_7,
+                                         ui->doubleSpinBox_7->value() + zDelta * moveStep);
+        } else {
+            setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_5,
+                                         ui->doubleSpinBox_5->value() + delta.x() * moveStep);
+            setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_6,
+                                         ui->doubleSpinBox_6->value() + delta.y() * moveStep);
+        }
 
-void MainWindow::moveTouchpadSceneByXY(
-    const QPoint& delta, int isPixelDelta)
-{
-    const double oldX = ui->doubleSpinBox_5->value();
-    const double oldY = ui->doubleSpinBox_6->value();
-    const double dx =
-        TouchpadHelper::deltaToSceneMove(delta.x(), isPixelDelta);
-    const double dy =
-        TouchpadHelper::deltaToSceneMove(delta.y(), isPixelDelta);
-
-    setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_5, oldX + dx);
-    setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_6, oldY + dy);
-    applyTouchpadTransform();
-}
-
-void MainWindow::moveTouchpadSceneByZ(
-    const QPoint& delta, int isPixelDelta)
-{
-    const double oldZ = ui->doubleSpinBox_7->value();
-    const double dz = TouchpadHelper::deltaToSceneMove(
-        TouchpadHelper::zScrollDelta(delta), isPixelDelta);
-
-    setSpinBoxValueWithoutUpdate(ui->doubleSpinBox_7, oldZ + dz);
-    applyTouchpadTransform();
-}
-
-void MainWindow::applyTouchpadTransform()
-{
-    updateTransform(false);
+        updateTransform(false);
+    }
 }
 
 void MainWindow::setupTouchpad()
 {
-    ui->graphicsView->setTransformationAnchor(
-        QGraphicsView::AnchorUnderMouse);
+    ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     ui->graphicsView->setResizeAnchor(QGraphicsView::AnchorUnderMouse);
     ui->graphicsView->setFocusPolicy(Qt::StrongFocus);
     ui->graphicsView->viewport()->setFocusPolicy(Qt::StrongFocus);
     ui->graphicsView->viewport()->unsetCursor();
-
-    ui->doubleSpinBox_5->setRange(
-        TouchpadHelper::MoveMinValue, TouchpadHelper::MoveMaxValue);
-    ui->doubleSpinBox_6->setRange(
-        TouchpadHelper::MoveMinValue, TouchpadHelper::MoveMaxValue);
-    ui->doubleSpinBox_7->setRange(
-        TouchpadHelper::MoveMinValue, TouchpadHelper::MoveMaxValue);
-    ui->doubleSpinBox_8->setRange(
-        TouchpadHelper::RotationMinValue, TouchpadHelper::RotationMaxValue);
-    ui->doubleSpinBox_9->setRange(
-        TouchpadHelper::RotationMinValue, TouchpadHelper::RotationMaxValue);
-    ui->doubleSpinBox_10->setRange(
-        TouchpadHelper::RotationMinValue, TouchpadHelper::RotationMaxValue);
-    ui->doubleSpinBox_14->setDecimals(TouchpadHelper::ScaleDecimals);
-    ui->doubleSpinBox_14->setSingleStep(TouchpadHelper::ScaleSingleStep);
 
     if (QCoreApplication::instance() != nullptr)
         QCoreApplication::instance()->installEventFilter(this);

@@ -69,9 +69,6 @@ private:
     int handleTouchpadNativeGesture(QNativeGestureEvent* gestureEvent);
     void zoomTouchpadScene(double scaleFactor);
     void moveTouchpadScene(const QPoint& delta, int isPixelDelta);
-    void moveTouchpadSceneByXY(const QPoint& delta, int isPixelDelta);
-    void moveTouchpadSceneByZ(const QPoint& delta, int isPixelDelta);
-    void applyTouchpadTransform();
     int acceptDropEvent(QDropEvent* dropEvent, int shouldSelectFile);
     void setSpinBoxValueWithoutUpdate(QDoubleSpinBox* spinBox, double value);
     void setDropHintVisible(int isVisible);

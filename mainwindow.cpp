@@ -3,10 +3,10 @@
 #include "ui_mainwindow.h"
 
 #include <QCoreApplication>
-#include <QDir>
-#include <QFile>
 #include <QFileDialog>
 #include <QStatusBar>
+
+#include <string>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupTouchpad();
 
     ui->contentStackedWidget->setCurrentWidget(ui->emptyPage);
-    ui->statusbar->showMessage(tr("Выберите CSV-файл"));
+    ui->statusbar->showMessage("Выберите CSV-файл");
 }
 
 MainWindow::~MainWindow()
@@ -39,36 +39,22 @@ void MainWindow::setupSceneDrawer()
 
 void MainWindow::setupConnections()
 {
-    connect(ui->icon_2, &QToolButton::clicked,
-            this, &MainWindow::onChooseFileClicked);
-    connect(ui->icon_4, &QToolButton::clicked,
-            this, &MainWindow::onChooseFileClicked);
-    connect(ui->pushButton, &QPushButton::clicked,
-            this, &MainWindow::onResetButtonClicked);
+    connect(ui->icon_2, &QToolButton::clicked, this, &MainWindow::onChooseFileClicked);
+    connect(ui->icon_4, &QToolButton::clicked, this, &MainWindow::onChooseFileClicked);
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::onResetButtonClicked);
 
-    connect(ui->doubleSpinBox_2, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onSurfaceParametersChanged);
-    connect(ui->doubleSpinBox, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onSurfaceParametersChanged);
-    connect(ui->doubleSpinBox_3, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onSurfaceParametersChanged);
-    connect(ui->doubleSpinBox_4, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onSurfaceParametersChanged);
+    connect(ui->doubleSpinBox_2, &QDoubleSpinBox::valueChanged, this, &MainWindow::onSurfaceParametersChanged);
+    connect(ui->doubleSpinBox, &QDoubleSpinBox::valueChanged, this, &MainWindow::onSurfaceParametersChanged);
+    connect(ui->doubleSpinBox_3, &QDoubleSpinBox::valueChanged, this, &MainWindow::onSurfaceParametersChanged);
+    connect(ui->doubleSpinBox_4, &QDoubleSpinBox::valueChanged, this, &MainWindow::onSurfaceParametersChanged);
 
-    connect(ui->doubleSpinBox_5, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_6, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_7, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_8, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_9, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_10, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
-    connect(ui->doubleSpinBox_14, &QDoubleSpinBox::valueChanged,
-            this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_5, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_6, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_7, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_8, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_9, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_10, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
+    connect(ui->doubleSpinBox_14, &QDoubleSpinBox::valueChanged, this, &MainWindow::onTransformParametersChanged);
 }
 
 void MainWindow::onChooseFileClicked()
@@ -77,9 +63,9 @@ void MainWindow::onChooseFileClicked()
         QCoreApplication::applicationDirPath() + "/../../../files_for_selecting";
     const QString filePath = QFileDialog::getOpenFileName(
         this,
-        tr("Выберите CSV-файл"),
+        "Выберите CSV-файл",
         projectFilesPath,
-        tr("CSV files (*.csv);;All files (*.*)"));
+        "CSV files (*.csv);;All files (*.*)");
 
     if (!filePath.isEmpty())
         selectFile(filePath);
@@ -158,11 +144,10 @@ TransformParams MainWindow::transformParamsFromUi() const
 
 bool MainWindow::loadData(const QString& filePath)
 {
-    const QByteArray encodedPath =
-        QFile::encodeName(QDir::toNativeSeparators(filePath));
+    const std::string path = filePath.toStdString();
     AppParams params = {};
 
-    params.filePath = encodedPath.constData();
+    params.filePath = path.c_str();
     params.surfaceParams = surfaceParamsFromUi();
     doOperation(LOAD_DATA, &context, &params);
 
@@ -197,43 +182,60 @@ bool MainWindow::handleOperationResult(bool fitScene)
     }
 
     sceneDrawer->drawScene(context.scene, fitScene);
-    ui->statusbar->showMessage(tr("Операция выполнена успешно"));
+    ui->statusbar->showMessage("Операция выполнена успешно");
 
     return true;
 }
 
 QString MainWindow::statusText(Status status) const
 {
+    QString text;
+
     switch (status) {
     case OK:
-        return tr("Операция выполнена успешно");
+        text = "Операция выполнена успешно";
+        break;
     case NULL_POINTER:
-        return tr("Внутренняя ошибка: получен нулевой указатель");
+        text = "Внутренняя ошибка: получен нулевой указатель";
+        break;
     case MEMORY_ERROR:
-        return tr("Не удалось выделить память");
+        text = "Не удалось выделить память";
+        break;
     case FILE_OPEN_ERROR:
-        return tr("Не удалось открыть файл");
+        text = "Не удалось открыть файл";
+        break;
     case EMPTY_FILE:
-        return tr("Выбранный файл пуст");
+        text = "Выбранный файл пуст";
+        break;
     case INVALID_NUMBER:
-        return tr("CSV-файл содержит некорректное число");
+        text = "CSV-файл содержит некорректное число";
+        break;
     case INVALID_ROW_SIZE:
-        return tr("Строки CSV-файла имеют разную длину");
+        text = "Строки CSV-файла имеют разную длину";
+        break;
     case INVALID_GRID_SIZE:
-        return tr("Некорректный размер таблицы");
+        text = "Некорректный размер таблицы";
+        break;
     case INVALID_NORMALIZATION_RANGE:
-        return tr("Минимум нормировки должен быть меньше максимума");
+        text = "Минимум нормировки должен быть меньше максимума";
+        break;
     case INVALID_STEP:
-        return tr("Шаг по осям должен быть положительным");
+        text = "Шаг по осям должен быть положительным";
+        break;
     case INVALID_SCALE:
-        return tr("Масштаб должен быть положительным");
+        text = "Масштаб должен быть положительным";
+        break;
     case DATA_NOT_LOADED:
-        return tr("Сначала загрузите CSV-файл");
+        text = "Сначала загрузите CSV-файл";
+        break;
     case UNKNOWN_OPERATION:
-        return tr("Неизвестная операция");
+        text = "Неизвестная операция";
+        break;
+    default:
+        text = "Неизвестная ошибка";
     }
 
-    return tr("Неизвестная ошибка");
+    return text;
 }
 
 int MainWindow::hasLoadedData() const
