@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     csv_reader.c \
+    drag_and_drop.cpp \
     entrypoint.c \
     grid.c \
     logic.c \
@@ -17,7 +18,9 @@ SOURCES += \
     matrix.c \
     mainwindow.cpp \
     scene.c \
-    surface.c
+    scene_drawer.cpp \
+    surface.c \
+    touchpad.cpp
 
 HEADERS += \
     appcontext.h \
@@ -28,6 +31,7 @@ HEADERS += \
     logic.h \
     matrix.h \
     scene.h \
+    scene_drawer.h \
     status.h \
     mainwindow.h \
     surface.h
