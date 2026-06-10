@@ -11,16 +11,21 @@ CONFIG += c++17
 SOURCES += \
     csv_reader.c \
     grid.c \
+    logic.c \
     main.cpp \
     matrix.c \
     mainwindow.cpp \
+    scene.c \
     surface.c
 
 HEADERS += \
+    appcontext.h \
     csv_reader.h \
     geometry.h \
     grid.h \
+    logic.h \
     matrix.h \
+    scene.h \
     status.h \
     mainwindow.h \
     surface.h
