@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     csv_reader.c \
+    entrypoint.c \
     grid.c \
     logic.c \
     main.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 HEADERS += \
     appcontext.h \
     csv_reader.h \
+    entrypoint.h \
     geometry.h \
     grid.h \
     logic.h \
