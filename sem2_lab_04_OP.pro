@@ -9,11 +9,21 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    csv_reader.c \
+    grid.c \
     main.cpp \
-    mainwindow.cpp
+    matrix.c \
+    mainwindow.cpp \
+    surface.c
 
 HEADERS += \
-    mainwindow.h
+    csv_reader.h \
+    geometry.h \
+    grid.h \
+    matrix.h \
+    status.h \
+    mainwindow.h \
+    surface.h
 
 FORMS += \
     mainwindow.ui
