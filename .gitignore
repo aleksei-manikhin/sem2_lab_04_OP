@@ -1,0 +1,36 @@
+# Build directories
+build/
+build-*/
+debug/
+release/
+
+# Qt Creator user files
+.qtcreator/
+*.pro.user
+*.pro.user.*
+*.qmake.stash
+
+# Qt generated files
+Makefile
+Makefile.*
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Compiled binaries and objects
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.lib
+
+# IDE/cache files
+.qtc_clangd/
+.cache/
+*.idx
+
+# Documents
+*.docx
