@@ -17,8 +17,8 @@ void sceneInit(Scene* scene)
     if (scene != NULL) {
         surfaceInit(&scene->surface);
         for (int index = 0; index < SCENE_AXIS_COUNT; index++) {
-            scene->axes[index].begin = (Point3D){0};
-            scene->axes[index].end = (Point3D){0};
+            scene->axes[index].begin  = (Point3D){.x = 0, .y = 0, .z = 0};
+            scene->axes[index].end = (Point3D){.x = 0, .y = 0, .z = 0};
         }
     }
 }
